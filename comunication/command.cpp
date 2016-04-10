@@ -123,6 +123,7 @@
             break;
     
             case PERIPHERAL_PETAL:
+			/* Copy parameter in all petals */
             if(myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0]==0xFF) 
 			{
 				j=0;
@@ -130,7 +131,7 @@
 			}
 			else
 				j=endCycle=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0];
-			    
+			   
             do 
             {			
 		      for(i=0;i<PARAM_LEN;i++)
@@ -157,6 +158,8 @@
 			break;
 			
 			case PERIPHERAL_MEMORY:
+			
+			   
 			   //memoryHandler(myBuffer->cmdBuffer[myBuffer->headQueue].rawData, myBuffer->cmdBuffer[myBuffer->headQueue].command.message.len);
 			break;
       }
@@ -172,3 +175,5 @@
 	  buffer->cmdPointer=0;
       buffer->headQueue=0;
   }
+  
+  
