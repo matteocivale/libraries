@@ -72,15 +72,15 @@
   
   
   
-  void EpromReadString(byte* string,int deviceAddress, unsigned int startingEepromAddress,unsigned int memorySize)
-  {
+ void EpromReadString(int deviceAddress, unsigned int startingEepromAddress, byte* string, unsigned int memorySize)
+ {
      
     for(int i=0;i<memorySize;i++)
 	{
       string[i]=(byte)readEEPROM(deviceAddress,startingEepromAddress+i); 
     }
    
-  } 
+ } 
    
   // void load_stored_command(int device_address, unsigned int memory_location,unsigned char* command){
   // for (int i=0;i<MEMORY_CMD_LENGHT;i++){

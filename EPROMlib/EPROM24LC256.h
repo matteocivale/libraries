@@ -18,7 +18,7 @@
  
  void EpromWriteString(int deviceaddress, unsigned int eprom_address, unsigned char * string, unsigned int string_len);
  
- void EpromReadString(byte* string,int deviceAddress, unsigned int startingEepromAddress,unsigned int memorySize);
+ void EpromReadString(int deviceAddress, unsigned int startingEepromAddress, byte* string, unsigned int memorySize);
  
  void writeEEPROM(int deviceaddress, unsigned int eeaddress, byte data );
  byte readEEPROM(int deviceaddress, unsigned int eeaddress );
