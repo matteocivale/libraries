@@ -373,20 +373,82 @@
 	  }
   }
   
-#define MEMORY_CMD_DESCRIPTOR 0x00
+/**
+ *Memory command type definition 
+ */
+#define MEMORY_CMD_DESCRIPTOR       0x00
+#define MEMORY_CMD_NEW_ANIM   		0x01
+#define MEMORY_CMD_STORE_ANI        0x02
+#define MEMORY_CMD_FRAME_TYME       0x03
   
   
   
   void memoryHandler(byte* command, byte commandLen)
   {
+	  
+	  
 	  switch (command[0])
 	  {
 		  case MEMORY_CMD_DESCRIPTOR:
-		    memoryDesc.currentPoint=command[1]<<8+command[2];
+		   // memoryDesc.currentPoint=command[1]<<8+command[2];
 		  break;
 		  
-		  default:
-		    EpromWriteString(EPROM_BANK0_ADDRESS, memoryDesc.currentPoint, command, PARAM_LEN);
+		  case MEMORY_CMD_NEW_ANIM:
+		    
+			memoryDesc.flags|=MEMORY_STATE_SAVE_NEW_ANIM_MASK;
+			memoryDesc.animDescriptor.animParameter.animId = command[1];
+			memoryDesc.animDescriptor.animParameter.adrStart= command[2]<<8+command[3];
+			memoryDesc.animDescriptor.animParameter.numFrame=command[4];
+		  
+		  break;
+		  
+		  case MEMORY_CMD_FRAME_TYME:
+		    memoryDesc.animDescriptor.animParameter.frameTimeLen[memoryDesc.frameIndex]=command[1]<<8+command[2];
+			memoryDesc.animDescriptor.animParameter.numberCmd[memoryDesc.frameIndex]=command[3];
+			memoryDesc.frameIndex++;
+		  break;
+		  
+		 // default:
+		  //  EpromWriteString(EPROM_BANK0_ADDRESS, memoryDesc.currentPoint, command, PARAM_LEN);
 		  
 	  }
   }
+  
+  byte animationDescriptor_save(animDescriptorType* descriptor, unsigned int adr)
+  {
+	  EpromWriteString(EPROM_BANK0_ADDRESS, adr, descriptor->raw, ANIMATION_DESCRIPTOR_LEN);
+      return 0;
+  }
+  
+  byte animationDescriptor_load(animDescriptorType* descriptor, unsigned int adr)
+  {
+	  EpromReadString(EPROM_BANK0_ADDRESS, adr, descriptor->raw, ANIMATION_DESCRIPTOR_LEN);
+	  return 0;
+  }
+  
+  byte storedCommand_save(comType* command, unsigned int adr)
+  {
+	  EpromWriteString(EPROM_BANK0_ADDRESS, adr, command->rawData, ANIMATION_DESCRIPTOR_LEN);
+      return 0;
+  }
+  
+  byte storedCommand_load(comType* command, unsigned int adr)
+  {
+	  EpromReadString(EPROM_BANK0_ADDRESS, adr, command->rawData, ANIMATION_DESCRIPTOR_LEN);
+      return 0;
+  }
+  
+  
+  void memoryManagare(void)
+  {
+	if(memoryDesc.flags&MEMORY_FLAGS_SAVE_NEW_ANIM_MASK)
+	{
+		memoryDesc.status&=~MEMORY_FLAGS_SAVE_NEW_ANIM_MASK;
+		memoryDesc.frameIndex=0;
+		memoryDesc.status|=MEMORY_FLAGS_SAVE_NEW_ANIM_MASK;
+	}  
+	
+	
+  }
+  
+  

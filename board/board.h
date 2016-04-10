@@ -74,19 +74,46 @@
 	  
   }buttonType;
   
-  #define MEMORY_DESCRIPTOR_LEN 10 
+  /**
+  * Structure for memory handling
+  */
+  
+  
+  #define ANIMATION_DESCRIPTOR_LEN   91
+  #define ANIMATION_MAX_FRAME_NUMBER 20
+  
+  typedef union
+  {
+	struct
+	{
+		byte animId;
+		unsigned int  adrStart;
+		byte numFrame;
+		unsigned int frameTimeLen[ANIMATION_MAX_FRAME_NUMBER];
+		byte numberCmd[ANIMATION_MAX_FRAME_NUMBER];
+	}animParameter;
+	byte raw[ANIMATION_DESCRIPTOR_LEN];
+  }animDescriptorType;
+  
+  
+  
+  
+#define MEMORY_FLAGS_SAVE_NEW_ANIM_MASK  0x01
+#define MEMORY_FLAGS_SAVE_NEW_ANIM_SHIFT 0x00
+#define MEMORY_STATE_SAVE_NEW_ANIM_MASK  0x02
+#define MEMORY_STATE_SAVE_NEW_ANIM_SHIFT 0x01
   typedef struct 
   {
-	  byte animationID[MEMORY_DESCRIPTOR_LEN];
-	  unsigned int animationAddress[MEMORY_DESCRIPTOR_LEN];
-	  unsigned int animationLen[MEMORY_DESCRIPTOR_LEN]; 
-	  unsigned int currentPoint;
+      byte status;	  
+	  byte flags;
+	  animDescriptorType animDescriptor;
+	  byte frameIndex;
 	  
   }memoryDescriptorType;
   
   extern memoryDescriptorType memoryDesc;
   
-  
+  /*************************************************************/
   
   
   typedef enum
@@ -119,3 +146,4 @@
   void petalsMonitor(void);
   
   void memoryHandler(byte* command, byte commandLen);
+  void memoryManagare(void);
