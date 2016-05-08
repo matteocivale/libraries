@@ -11,11 +11,14 @@
   
   MSGEQ7 msgeq7;
   
-  buttonType button={{0,0,0}, false, false, 0, 0, Adafruit_CAP1188(CAP1188_RESET)};
+  buttonType button={{0,0,0}, false, false, 0, 0, 0, 0, 0, Adafruit_CAP1188(CAP1188_RESET)};
  // button.CAP1188=Adafruit_CAP1188(CAP1188_RESET);
   petalType petals[BOARD_MAX_PETAL_NUM];
   
   memoryDescriptorType memoryDesc;
+  
+  
+
   
   void boardInit(void)
   {
@@ -48,7 +51,7 @@
 	
  
 	 /* Initialize system reg status */
-	 sysReg={SYSTEM_BLE_OFF,SYSTEM_COMMAND_MODE};
+	 sysReg={SYSTEM_BLE_OFF, SL_STARTUP, SYSTEM_COMMAND_MODE};
      
   }
   
@@ -134,20 +137,20 @@
 	    	 if((HTime>BUTTON_TIME_LONG)&&(HTime<BUTTON_TIME_SLONG))
 		     {
 			    ltapN++;
-				Serial.println("one ltap");
+				//Serial.println("one ltap");
 		     }			 
 		     else
 				 if(HTime>BUTTON_TIME_SLONG)
 				 {
                     sltapN++;			 
-				    Serial.println("long sltap");
+				   // Serial.println("long sltap");
 				 }
 		 LTime+=button.deltaT;
 		 if(LTime>500)//900 ok
 		 {
 			// tapN=0;
-			 ltapN=0;
-			 sltapN=0;
+			// ltapN=0;
+			// sltapN=0;
 			 dvalid=true;
 		 }
 		 HTime=0;
@@ -157,23 +160,18 @@
 	 
 	 if(dvalid)
 	 {
-		 if(tapN==2)
-		 {
-			 button.color[0]=0xff;
-			 button.color[1]=0;
-			 button.color[2]=0;
-			 button.writeColor=true;
-			 
-		 }
-		 if(tapN==3)
-		 {
-			 button.color[0]=0;
-			 button.color[1]=0xff;
-			 button.color[2]=0;
-			 button.writeColor=true;
-			 
-		 }
+		 button.ntap=tapN;
+	     button.nltap=ltapN;
+	     button.nsltap=sltapN;
+		 /* Reset all counts */
+		 ltapN=0;
 		 tapN=0;
+		 sltapN=0;
+		 
+		 
+		 
+		
+		 
 	 }
 	 return 0;
   }
@@ -202,7 +200,7 @@
   void petalsMonitor(void)
   {
 	  byte petalIndex;
-	   unsigned long int actTime;
+	  unsigned long int actTime;
 	  
 	  
 	  for(petalIndex=0;petalIndex<BOARD_INSTALLED_PETALS;petalIndex++)
@@ -449,6 +447,57 @@
 	}  
 	
 	
+  }
+  #define TIME_DELAY_BETWEEN 80
+  void animationManager(systemBufType* myBuffer)
+  {
+	  
+	  static unsigned long int lastTime=0;
+	  unsigned long int actTime;
+	  static byte actPointer=0;
+	  static byte lastPointer=6;
+	  
+	  static byte command[]={2,0,3,0,0,0,0};
+	  static int level=16;
+	  static int level1=4;
+	  
+	  actTime=millis();
+	  
+	  
+	  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+	  {
+		  command[1]=lastPointer;
+		  command[3]=0;
+		  command[4]=0;
+		  command[5]=0;
+		  command[6]=0;
+		//  push_command(myBuffer, command, 7);  
+		  
+		  lastPointer=actPointer;
+		 
+		  
+		  
+		  
+		  
+		  command[1]=actPointer;
+		  command[3]=0;
+		  command[4]=0;//level1;
+		  command[5]=0;
+		  command[6]=level1;
+		  
+		  push_command(myBuffer, command, 7); 
+          
+		  level+=2;
+		  level1+=4;
+		  if(level>255) level=2;		  
+		  if(level1>255)level1=4;
+		  actPointer++;
+		  actPointer%=7;
+		  
+		  lastTime=actTime;
+		  
+	  }
+	  
   }
   
   

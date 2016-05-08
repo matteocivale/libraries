@@ -5,6 +5,7 @@
   #include "command.h"
   #include "MSGEQ7.h"
   #include "EPROM24LC256.h" 
+  #include "BC127.h"
   
   #define BOARD_BUTTON_REDLED_PIN    9    
   #define BOARD_BUTTON_GREENLED_PIN  10
@@ -40,13 +41,26 @@
   
   #define EPROM_BANK0_ADDRESS 0x50
   
+  typedef enum
+  {
+	 SL_STARTUP,
+	 SL_OFF,
+	 SL_DISCONNECTED,
+	 SL_CONNECTED,
+  }stateType;
+  
+  
+  
+  
   typedef struct
   {
 	  byte bleState;
-	  
+	  stateType state;
 	  byte sysStatus;
 	  
   }SysRegType;
+  
+  
   
   typedef struct 
   {
@@ -69,10 +83,15 @@
 	  bool touchState;
 	  long int time;
 	  long int deltaT;
+	  /* Number of different tap */
+	  byte ntap;
+	  byte nltap;
+	  byte nsltap;
 	  
 	  Adafruit_CAP1188 CAP1188;//Adafruit_CAP1188(CAP1188_RESET);
 	  
   }buttonType;
+  extern buttonType button;
   
   /**
   * Structure for memory handling
@@ -147,3 +166,5 @@
   
   void memoryHandler(byte* command, byte commandLen);
   void memoryManagare(void);
+  
+  void animationManager(systemBufType* myBuffer);
