@@ -94,6 +94,8 @@
   byte commandProcessor(systemBufType* myBuffer);
   
   void resetBuffer(systemBufType* buffer);
+  void push_command(systemBufType* myBuffer, byte* command, byte len);
+  void pop_command(systemBufType* myBuffer);
 
   
   

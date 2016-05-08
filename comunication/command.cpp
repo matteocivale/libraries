@@ -176,4 +176,20 @@
       buffer->headQueue=0;
   }
   
+  void push_command(systemBufType* myBuffer, byte* command, byte len)
+  {
+	  byte i;
+	  for (i=0; i<len; i++)
+	  {
+	     myBuffer->cmdBuffer[myBuffer->cmdPointer].command.rawData[i]=command[i];
+	  }
+	  myBuffer->cmdBuffer[myBuffer->cmdPointer].command.message.len=len;
+	  myBuffer->cmdBuffer[myBuffer->cmdPointer].noProcess=1;
+	  
+	  /* Increment header pointer */
+	  myBuffer->cmdPointer++;
+	  myBuffer->cmdPointer%=CMD_BUFFER_LEN;
+  }
+  void pop_command(systemBufType* myBuffer)
+  {}
   
