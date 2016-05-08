@@ -52,7 +52,11 @@
    */   
    
    bool BC127_IsBleOn(void);
-  
+   
+   /*
+    *@ Return true if the BC127 return "OK"	
+	*/
+   bool BC127_sendCmd(char *command, byte cmdlen);
   
   #endif
   

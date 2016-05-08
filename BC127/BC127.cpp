@@ -1,7 +1,8 @@
-// BC127.cpp
-// Library for controlling BC127 of BlueCreation
-// Credit to Matteo Civale(matteo.civale@gmail.com) for the original implementation
-
+/*
+ * BC127.cpp
+ * Library for controlling BC127 of BlueCreation
+ * Credit to Matteo Civale(matteo.civale@gmail.com) for the original implementation
+*/
 
   #include "BC127.h"
   
@@ -55,6 +56,21 @@
   bool BC127_IsBleOn(void)
   {
 	  return isBleOn;
+  }
+  
+  bool BC127_sendCmd(char *command, byte cmdlen)
+  {
+	BC127Com.flush();
+    BC127Com.write(command,cmdlen);
+    BC127Com.print("\r");
+    while(BC127Com.available()<2){;};
+    BC127Com.readBytes(btBuffer,2);
+    if((btBuffer[0]=='O')&&(btBuffer[1]=='K')) 
+	{
+      return true;
+    }
+	else
+      return false;
   }
 
 
