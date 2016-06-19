@@ -158,9 +158,11 @@
 			break;
 			
 			case PERIPHERAL_MEMORY:
-			
-			   
 			   //memoryHandler(myBuffer->cmdBuffer[myBuffer->headQueue].rawData, myBuffer->cmdBuffer[myBuffer->headQueue].command.message.len);
+			break;
+			
+			case PERIPHERAL_ANIMATION_MANAGER:
+			
 			break;
       }
       myBuffer->headQueue++;

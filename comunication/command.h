@@ -70,10 +70,11 @@
   /* Peripheral id  Type*/
   typedef enum
   {
-    PERIPHERAL_BC_127 =0x01,
-    PERIPHERAL_PETAL  =0x02,
-	PERIPHERAL_BUTTON =0x03,
-	PERIPHERAL_MEMORY =0x04,
+    PERIPHERAL_BC_127            = 0x01,
+    PERIPHERAL_PETAL             = 0x02,
+	PERIPHERAL_BUTTON            = 0x03,
+	PERIPHERAL_MEMORY            = 0x04,
+	PERIPHERAL_ANIMATION_MANAGER = 0x05,
   
   }peripheralIdType;
   
