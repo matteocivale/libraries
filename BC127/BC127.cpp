@@ -38,7 +38,6 @@
   byte BC127_BleON(void)
   {
     
-	
 	BC127Com.flush();
     BC127Com.println("ADVERTISING ON");
     BC127Com.print("\r");
@@ -57,15 +56,21 @@
   {
 	  return isBleOn;
   }
-  
+ /* 
   bool BC127_sendCmd(char *command, byte cmdlen)
-  {
+*/ 
+bool BC127_sendCmd(char *command, byte cmdlen, char* topars, byte parslen)
+ {
 	BC127Com.flush();
     BC127Com.write(command,cmdlen);
     BC127Com.print("\r");
+//	BC127Com.find(topars, parslen);
+/*	
     while(BC127Com.available()<2){;};
     BC127Com.readBytes(btBuffer,2);
     if((btBuffer[0]=='O')&&(btBuffer[1]=='K')) 
+*/	
+    if(BC127Com.find(topars, parslen))
 	{
       return true;
     }

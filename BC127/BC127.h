@@ -56,7 +56,8 @@
    /*
     *@ Return true if the BC127 return "OK"	
 	*/
-   bool BC127_sendCmd(char *command, byte cmdlen);
+   bool BC127_sendCmd(char *command, byte cmdlen, char* topars, byte parslen);
+ //  bool BC127_sendCmd(char *command, byte cmdlen);
   
   #endif
   

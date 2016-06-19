@@ -445,27 +445,97 @@
 		memoryDesc.frameIndex=0;
 		memoryDesc.status|=MEMORY_FLAGS_SAVE_NEW_ANIM_MASK;
 	}  
-	
-	
+
   }
-  #define TIME_DELAY_BETWEEN 80
+  
+  
+  
+  #define TIME_DELAY_BETWEEN 100//80
   void animationManager(systemBufType* myBuffer)
   {
 	  
 	  static unsigned long int lastTime=0;
 	  unsigned long int actTime;
-	  static byte actPointer=0;
-	  static byte lastPointer=6;
+	  static byte actPointer  = 0;
+	  static byte lastPointer = 0;
+	  
 	  
 	  static byte command[]={2,0,3,0,0,0,0};
 	  static int level=16;
 	  static int level1=4;
-	  
+	  static byte scelta = 3;
+	  static int inc = 1;//uguale a 1 nel caso di scelta=2 altrimenti 7
+ 	  
 	  actTime=millis();
 	  
-	  
-	  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+	  switch (scelta)
 	  {
+		  case 1:
+			  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+			  {
+				  command[1]=lastPointer;
+				  command[3]=0;
+				  command[4]=0;
+				  command[5]=0;
+				  command[6]=0;
+				  push_command(myBuffer, command, 7);  
+				  
+				  lastPointer=actPointer;
+				 
+				  actPointer = random(0,7);
+				  
+				  command[1]=actPointer;
+				  command[3]=255;
+				  command[4]=0;//level1;
+				  command[5]=0;
+				  command[6]=0;//level1;
+				  
+				  push_command(myBuffer, command, 7); 
+				  
+				  // level+=2;
+				  // level1+=4;
+				  // if(level>255) level=2;		  
+				  // if(level1>255)level1=4;
+				  // actPointer++;
+				  // actPointer%=7;
+				  
+				  
+				  lastTime=actTime;
+				  
+			  }
+	  break;
+	  
+	  case 2:
+		if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+        {
+		     command[1] = lastPointer;
+		     command[3] = 0;
+		     command[4] = 0;
+		     command[5] = 0;
+		     command[6] = 0;
+		     push_command(myBuffer, command, 7);  
+		  
+		     command[1] = actPointer;
+		     command[3] = 0;
+		     command[4] = 255;//level1;
+		     command[5] = 0;
+		     command[6] = 0;//level1;
+		  
+		     push_command(myBuffer, command, 7); 
+			 
+			 lastPointer=actPointer;
+			 if(actPointer == 6) inc=-1;
+			 if(actPointer == 0) inc=+1;
+			 actPointer += inc;
+			 //actPointer %= 7;
+		     lastTime=actTime;
+				  
+	    }
+	  
+	  break;
+	  case 3:
+		if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+        {
 		  command[1]=lastPointer;
 		  command[3]=0;
 		  command[4]=0;
@@ -495,7 +565,81 @@
 		  actPointer%=7;
 		  
 		  lastTime=actTime;
+		}
+	  break;
+	  
+	  case 4:
+		  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+			{
+				 
+				if(actPointer==7)
+				{
+					 command[1] = 0xFF;
+					 command[3] = 0;
+					 command[4] = 0;
+					 command[5] = 0;
+					 command[6] = 0;
+					 push_command(myBuffer, command, 7);  
+					 actPointer=0;
+				}  
+				else
+				{
+					 command[1] = actPointer;
+					 command[3] = 0;
+					 command[4] = 255;//level1;
+					 command[5] = 0;
+					 command[6] = 0;//level1;
+					 push_command(myBuffer, command, 7); 
+					 actPointer++;
+				}
+				lastTime=actTime;
+					  
+			}
+		
+	  break;
+	  case 5:
+		  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+			{
+			
+				
+				
+				command[1] = lastPointer;
+		        command[3] = 0;
+		        command[4] = 0;
+		        command[5] = 0;
+		        command[6] = 0;
+		        push_command(myBuffer, command, 7);  
 		  
+		        command[1] = actPointer;
+		        command[3] = 0;
+		        command[4] = 255;//level1;
+		        command[5] = 0;
+		        command[6] = 0;//level1;
+		  
+		        push_command(myBuffer, command, 7); 
+			 
+			    
+				lastPointer=actPointer;
+				actPointer++;
+				if(actPointer == inc)
+				{
+					inc--;
+					actPointer = 0;
+					lastPointer = 0;
+					if(inc == 0)
+					{
+						inc = 7;
+					    lastPointer=0xFF;
+					}
+				}
+				actPointer %= inc;
+				
+			    //actPointer %= 7;
+		        lastTime=actTime;
+					  
+			}
+	  
+	  break;
 	  }
 	  
   }
