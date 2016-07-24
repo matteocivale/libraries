@@ -9,7 +9,7 @@
   #include "SoftwareSerial.h"
 
  /*
-  *                                 Constant definition
+  *                                 CONSTANT DEFINITION
   */
 
 
@@ -67,7 +67,7 @@
   
   
   
-  /* Peripheral id  Type*/
+  /* Peripherals id  Type */
   typedef enum
   {
     PERIPHERAL_BC_127            = 0x01,
@@ -82,11 +82,11 @@
   /* Definition of system commands buffer */
   extern systemBufType sysBuffer;
   
-  /*
+  /**
    *
-   *                                Function Interface
+   *                                FUNCTION INTERFACE
    *
-   */
+   **/
   
   comState CheckNewCommand(systemBufType* myBuffer,SoftwareSerial *myCom);
   

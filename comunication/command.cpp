@@ -123,46 +123,61 @@
             break;
     
             case PERIPHERAL_PETAL:
-			/* Copy parameter in all petals */
-            if(myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0]==0xFF) 
-			{
-				j=0;
-			    endCycle=BOARD_INSTALLED_PETALS;
-			}
-			else
-				j=endCycle=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0];
-			   
-            do 
-            {			
-		      for(i=0;i<PARAM_LEN;i++)
-			  {
-				  petals[j].lastCmdpParam[i]=
-				                            myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[i+1];
-			  }
-              petals[j].iWork=true;
-              petals[j].deltaT=0;
-			  petals[j].lastTime=0;
-			  j++;
-			}while(j<endCycle);
+				
+				/* Copy parameter in all petals */
+				if(myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0]==0xFF) 
+				{
+					j=0;
+					endCycle=BOARD_INSTALLED_PETALS;
+				}
+				else
+					j=endCycle=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0];
+				   
+				do 
+				{			
+				  for(i=0;i<PARAM_LEN;i++)
+				  {
+					  petals[j].lastCmdpParam[i]=
+												myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[i+1];
+				  }
+				  petals[j].iWork=true;
+				  petals[j].deltaT=0;
+				  petals[j].lastTime=0;
+				  j++;
+				}while(j<endCycle);
 			  
             break;
 			
 			case PERIPHERAL_BUTTON:
 			  
-			  byte app[3];
-			  app[0]=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0];
-			  app[1]=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[1];
-			  app[2]=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[2];
-			  setButtonColor(app);
+			    byte app[3];
+			    app[0]=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0];
+			    app[1]=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[1];
+			    app[2]=myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[2];
+			    setButtonColor(app);
 			
 			break;
 			
 			case PERIPHERAL_MEMORY:
-			   //memoryHandler(myBuffer->cmdBuffer[myBuffer->headQueue].rawData, myBuffer->cmdBuffer[myBuffer->headQueue].command.message.len);
+			    memoryHandler(myBuffer->cmdBuffer[myBuffer->headQueue].command.rawData, myBuffer->cmdBuffer[myBuffer->headQueue].command.message.len);
 			break;
 			
 			case PERIPHERAL_ANIMATION_MANAGER:
 			
+			    /* Animation Id */
+			    sysReg.animInfo.animId = 
+			     myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[0];
+			
+			    /* Animation Type */			
+			    sysReg.animInfo.animType =
+			     myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[1];
+			    
+				/* Start/Stop */
+			    if(myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[2])
+			     sysReg.animInfo.command.start = true;
+		        else
+				 sysReg.animInfo.command.stop = true;	
+			 
 			break;
       }
       myBuffer->headQueue++;
