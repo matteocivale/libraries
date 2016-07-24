@@ -1,24 +1,24 @@
 
 
   #include "board.h"
-  //#include "Adafruit_CAP1188.h"
+ 
+ /*Global variable definition */ 
   
   byte zeros[]={0,0,0};
-  
-  /* msgeq7 definition*/
   
   SysRegType sysReg;
   
   MSGEQ7 msgeq7;
   
   buttonType button={{0,0,0}, false, false, 0, 0, 0, 0, 0, Adafruit_CAP1188(CAP1188_RESET)};
- // button.CAP1188=Adafruit_CAP1188(CAP1188_RESET);
+ 
   petalType petals[BOARD_MAX_PETAL_NUM];
   
   memoryDescriptorType memoryDesc;
   
-  
-
+  /**
+   * FUNCTION IMPLEMENTATION
+   */
   
   void boardInit(void)
   {
@@ -29,7 +29,6 @@
 	 
 	 /* Inizialize MSGEQ7 */
      msgeq7.init(MSGEQT_PIN_OUTPUT, MSGEQT_PIN_STROBE, MSGEQT_PIN_RESET);
-
 	 
      /* Reset all petals */	
      for(i=1; i<= 0x07; i++ )	 
@@ -47,14 +46,15 @@
 	 /* Test EPROM */
 	 // EpromWriteString(EPROM_BANK0_ADDRESS,0,(unsigned char*)str, sizeof(str));
      // EpromReadString((byte*)buf,EPROM_BANK0_ADDRESS, 0,sizeof(str));
-	 
-	
- 
-	 /* Initialize system reg status */
+
+	 /* Put system in start up state */
 	 sysReg={SYSTEM_BLE_OFF, SL_STARTUP, SYSTEM_COMMAND_MODE};
      
   }
   
+  /*
+   * This function change the button color 
+   */
   void setButtonColor(byte *color)
   {
 	  
@@ -64,8 +64,9 @@
 	 button.writeColor=true;
   }
   
-  
-  
+  /*
+   * This function change the button state 
+   */
   byte buttonMonitor(void)
   {
      static long int HTime=0;
@@ -76,7 +77,7 @@
 	 static bool dvalid=false;
 	 static float ramp;
 	 static byte sign=0;
-	 //static float rise =255/
+	 
 	 
 	 long int actTime=millis();
 	 button.deltaT=actTime-button.time;
@@ -176,6 +177,9 @@
 	 return 0;
   }
   
+  /*
+   * This function initialize the button 
+   */
   bool buttonInit(void)
   {
 	  setButtonColor(zeros);
@@ -186,7 +190,8 @@
   {
 	  analogWrite(BOARD_BUTTON_REDLED_PIN, 0xff);
   }
-/*index */
+
+  /* This is the list of petal command  */
 
   #define PETALS_BLINK               0x01
   #define PETALS_PULSE               0x02
@@ -196,7 +201,9 @@
   #define PETALS_EXTEND_BAND_SYNC    0x06
   #define PETALS_FADE                0x07
 
-
+ /** 
+  * This function set control the petals state and action
+  */
   void petalsMonitor(void)
   {
 	  byte petalIndex;
@@ -374,21 +381,23 @@
 /**
  *Memory command type definition 
  */
-#define MEMORY_CMD_DESCRIPTOR       0x00
-#define MEMORY_CMD_NEW_ANIM   		0x01
-#define MEMORY_CMD_STORE_ANI        0x02
-#define MEMORY_CMD_FRAME_TYME       0x03
-  
-  
+#define MEMORY_CMD_NEW_CMD              0x00
+#define MEMORY_CMD_NEW_ANIM   		    0x01
+#define MEMORY_CMD_STORE_ANI            0x02
+#define MEMORY_CMD_FRAME_TYME           0x03
+#define MEMORY_CMD_ANIM_ADDRESS_OFFSET  0x04
   
   void memoryHandler(byte* command, byte commandLen)
   {
 	  
-	  
 	  switch (command[0])
 	  {
-		  case MEMORY_CMD_DESCRIPTOR:
+		  case MEMORY_CMD_NEW_CMD:
 		   // memoryDesc.currentPoint=command[1]<<8+command[2];
+		    storedCommand_save(command, MEMORY_CMD_ANIM_ADDRESS_OFFSET+
+			memoryDesc.animDescriptor.animParameter.adrStart+
+			memoryDesc.commandCont);
+		    memoryDesc.commandCont++;
 		  break;
 		  
 		  case MEMORY_CMD_NEW_ANIM:
@@ -397,13 +406,20 @@
 			memoryDesc.animDescriptor.animParameter.animId = command[1];
 			memoryDesc.animDescriptor.animParameter.adrStart= command[2]<<8+command[3];
 			memoryDesc.animDescriptor.animParameter.numFrame=command[4];
+			memoryDesc.frameIndex  = 0;
+			memoryDesc.commandCont = 0;
 		  
 		  break;
 		  
 		  case MEMORY_CMD_FRAME_TYME:
+		  
 		    memoryDesc.animDescriptor.animParameter.frameTimeLen[memoryDesc.frameIndex]=command[1]<<8+command[2];
 			memoryDesc.animDescriptor.animParameter.numberCmd[memoryDesc.frameIndex]=command[3];
 			memoryDesc.frameIndex++;
+			if(memoryDesc.frameIndex==memoryDesc.animDescriptor.animParameter.numFrame)
+				animationDescriptor_save(&memoryDesc.animDescriptor,memoryDesc.animDescriptor.animParameter.animId+
+			    ANIMATION_DESCRIPTOR_LEN+ANIMATION_MEMORY_ADDRESS_OFFSET);
+		  
 		  break;
 		  
 		 // default:
@@ -424,9 +440,9 @@
 	  return 0;
   }
   
-  byte storedCommand_save(comType* command, unsigned int adr)
+  byte storedCommand_save(byte* command, unsigned int adr)
   {
-	  EpromWriteString(EPROM_BANK0_ADDRESS, adr, command->rawData, ANIMATION_DESCRIPTOR_LEN);
+	  EpromWriteString(EPROM_BANK0_ADDRESS, adr, command, PARAM_LEN);
       return 0;
   }
   
@@ -439,6 +455,7 @@
   
   void memoryManagare(void)
   {
+	/*When it save a new animation in the memory */
 	if(memoryDesc.flags&MEMORY_FLAGS_SAVE_NEW_ANIM_MASK)
 	{
 		memoryDesc.status&=~MEMORY_FLAGS_SAVE_NEW_ANIM_MASK;
@@ -458,188 +475,220 @@
 	  unsigned long int actTime;
 	  static byte actPointer  = 0;
 	  static byte lastPointer = 0;
+	  static bool run = false;
 	  
 	  
 	  static byte command[]={2,0,3,0,0,0,0};
 	  static int level=16;
 	  static int level1=4;
-	  static byte scelta = 3;
-	  static int inc = 1;//uguale a 1 nel caso di scelta=2 altrimenti 7
+	  static byte animId = 3;
+	  static int inc;// = 1;//uguale a 1 nel caso di scelta=2 altrimenti 7
  	  
-	  actTime=millis();
-	  
-	  switch (scelta)
+	  if(sysReg.animInfo.command.start)
 	  {
-		  case 1:
-			  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+		  sysReg.animInfo.command.start = false;
+		  run = true;
+		  
+		  if (sysReg.animInfo.animType == ANIM_TYPE_CUSTOM)
+		  {	  
+			  switch(animId)
 			  {
-				  command[1]=lastPointer;
-				  command[3]=0;
-				  command[4]=0;
-				  command[5]=0;
-				  command[6]=0;
-				  push_command(myBuffer, command, 7);  
+				  case 2:
+				   inc = 1;
+				  break;
 				  
-				  lastPointer=actPointer;
-				 
-				  actPointer = random(0,7);
-				  
-				  command[1]=actPointer;
-				  command[3]=255;
-				  command[4]=0;//level1;
-				  command[5]=0;
-				  command[6]=0;//level1;
-				  
-				  push_command(myBuffer, command, 7); 
-				  
-				  // level+=2;
-				  // level1+=4;
-				  // if(level>255) level=2;		  
-				  // if(level1>255)level1=4;
-				  // actPointer++;
-				  // actPointer%=7;
-				  
-				  
-				  lastTime=actTime;
-				  
+				  case 1:
+				  case 3:
+				  case 4:
+				  case 5:
+				   inc =7;
+				  break;
 			  }
-	  break;
-	  
-	  case 2:
-		if((actTime-lastTime)>TIME_DELAY_BETWEEN)
-        {
-		     command[1] = lastPointer;
-		     command[3] = 0;
-		     command[4] = 0;
-		     command[5] = 0;
-		     command[6] = 0;
-		     push_command(myBuffer, command, 7);  
+		  }
+	  }
+	  if(sysReg.animInfo.command.stop)
+	  {
+		  sysReg.animInfo.command.stop = false;
+		  run = false;
+	  }
 		  
-		     command[1] = actPointer;
-		     command[3] = 0;
-		     command[4] = 255;//level1;
-		     command[5] = 0;
-		     command[6] = 0;//level1;
+	  if(run)
+	  {	  
+		  actTime=millis();
 		  
-		     push_command(myBuffer, command, 7); 
-			 
-			 lastPointer=actPointer;
-			 if(actPointer == 6) inc=-1;
-			 if(actPointer == 0) inc=+1;
-			 actPointer += inc;
-			 //actPointer %= 7;
-		     lastTime=actTime;
-				  
-	    }
-	  
-	  break;
-	  case 3:
-		if((actTime-lastTime)>TIME_DELAY_BETWEEN)
-        {
-		  command[1]=lastPointer;
-		  command[3]=0;
-		  command[4]=0;
-		  command[5]=0;
-		  command[6]=0;
-		//  push_command(myBuffer, command, 7);  
+		  switch (animId)
+		  {
+			  case 1:
+				  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+				  {
+					  command[1]=lastPointer;
+					  command[3]=0;
+					  command[4]=0;
+					  command[5]=0;
+					  command[6]=0;
+					  push_command(myBuffer, command, 7);  
+					  
+					  lastPointer=actPointer;
+					 
+					  actPointer = random(0,7);
+					  
+					  command[1]=actPointer;
+					  command[3]=255;
+					  command[4]=0;//level1;
+					  command[5]=0;
+					  command[6]=0;//level1;
+					  
+					  push_command(myBuffer, command, 7); 
+					  
+					  // level+=2;
+					  // level1+=4;
+					  // if(level>255) level=2;		  
+					  // if(level1>255)level1=4;
+					  // actPointer++;
+					  // actPointer%=7;
+					  
+					  
+					  lastTime=actTime;
+					  
+				  }
+		  break;
 		  
-		  lastPointer=actPointer;
-		 
-		  
-		  
-		  
-		  
-		  command[1]=actPointer;
-		  command[3]=0;
-		  command[4]=0;//level1;
-		  command[5]=0;
-		  command[6]=level1;
-		  
-		  push_command(myBuffer, command, 7); 
-          
-		  level+=2;
-		  level1+=4;
-		  if(level>255) level=2;		  
-		  if(level1>255)level1=4;
-		  actPointer++;
-		  actPointer%=7;
-		  
-		  lastTime=actTime;
-		}
-	  break;
-	  
-	  case 4:
-		  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+		  case 2:
+			if((actTime-lastTime)>TIME_DELAY_BETWEEN)
 			{
+				 command[1] = lastPointer;
+				 command[3] = 0;
+				 command[4] = 0;
+				 command[5] = 0;
+				 command[6] = 0;
+				 push_command(myBuffer, command, 7);  
+			  
+				 command[1] = actPointer;
+				 command[3] = 0;
+				 command[4] = 255;//level1;
+				 command[5] = 0;
+				 command[6] = 0;//level1;
+			  
+				 push_command(myBuffer, command, 7); 
 				 
-				if(actPointer==7)
-				{
-					 command[1] = 0xFF;
-					 command[3] = 0;
-					 command[4] = 0;
-					 command[5] = 0;
-					 command[6] = 0;
-					 push_command(myBuffer, command, 7);  
-					 actPointer=0;
-				}  
-				else
-				{
-					 command[1] = actPointer;
-					 command[3] = 0;
-					 command[4] = 255;//level1;
-					 command[5] = 0;
-					 command[6] = 0;//level1;
-					 push_command(myBuffer, command, 7); 
-					 actPointer++;
-				}
-				lastTime=actTime;
+				 lastPointer=actPointer;
+				 if(actPointer == 6) inc=-1;
+				 if(actPointer == 0) inc=+1;
+				 actPointer += inc;
+				 //actPointer %= 7;
+				 lastTime=actTime;
 					  
 			}
-		
-	  break;
-	  case 5:
-		  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+		  
+		  break;
+		  case 3:
+			if((actTime-lastTime)>TIME_DELAY_BETWEEN)
 			{
-			
-				
-				
-				command[1] = lastPointer;
-		        command[3] = 0;
-		        command[4] = 0;
-		        command[5] = 0;
-		        command[6] = 0;
-		        push_command(myBuffer, command, 7);  
-		  
-		        command[1] = actPointer;
-		        command[3] = 0;
-		        command[4] = 255;//level1;
-		        command[5] = 0;
-		        command[6] = 0;//level1;
-		  
-		        push_command(myBuffer, command, 7); 
+			  command[1]=lastPointer;
+			  command[3]=0;
+			  command[4]=0;
+			  command[5]=0;
+			  command[6]=0;
+			//  push_command(myBuffer, command, 7);  
+			  
+			  lastPointer=actPointer;
 			 
-			    
-				lastPointer=actPointer;
-				actPointer++;
-				if(actPointer == inc)
-				{
-					inc--;
-					actPointer = 0;
-					lastPointer = 0;
-					if(inc == 0)
-					{
-						inc = 7;
-					    lastPointer=0xFF;
-					}
-				}
-				actPointer %= inc;
-				
-			    //actPointer %= 7;
-		        lastTime=actTime;
-					  
+			  
+			  
+			  
+			  
+			  command[1]=actPointer;
+			  command[3]=0;
+			  command[4]=0;//level1;
+			  command[5]=0;
+			  command[6]=level1;
+			  
+			  push_command(myBuffer, command, 7); 
+			  
+			  level+=2;
+			  level1+=4;
+			  if(level>255) level=2;		  
+			  if(level1>255)level1=4;
+			  actPointer++;
+			  actPointer%=7;
+			  
+			  lastTime=actTime;
 			}
-	  
-	  break;
+		  break;
+		  
+		  case 4:
+			  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+				{
+					 
+					if(actPointer==7)
+					{
+						 command[1] = 0xFF;
+						 command[3] = 0;
+						 command[4] = 0;
+						 command[5] = 0;
+						 command[6] = 0;
+						 push_command(myBuffer, command, 7);  
+						 actPointer=0;
+					}  
+					else
+					{
+						 command[1] = actPointer;
+						 command[3] = 0;
+						 command[4] = 255;//level1;
+						 command[5] = 0;
+						 command[6] = 0;//level1;
+						 push_command(myBuffer, command, 7); 
+						 actPointer++;
+					}
+					lastTime=actTime;
+						  
+				}
+			
+		  break;
+		  case 5:
+			  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
+				{
+				
+					
+					
+					command[1] = lastPointer;
+					command[3] = 0;
+					command[4] = 0;
+					command[5] = 0;
+					command[6] = 0;
+					push_command(myBuffer, command, 7);  
+			  
+					command[1] = actPointer;
+					command[3] = 0;
+					command[4] = 255;//level1;
+					command[5] = 0;
+					command[6] = 0;//level1;
+			  
+					push_command(myBuffer, command, 7); 
+				 
+					
+					lastPointer=actPointer;
+					actPointer++;
+					if(actPointer == inc)
+					{
+						inc--;
+						actPointer = 0;
+						lastPointer = 0;
+						if(inc == 0)
+						{
+							inc = 7;
+							lastPointer=0xFF;
+						}
+					}
+					actPointer %= inc;
+					
+					//actPointer %= 7;
+					lastTime=actTime;
+						  
+				}
+		  
+		  break;
+		  }
 	  }
 	  
   }

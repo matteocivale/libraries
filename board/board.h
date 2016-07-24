@@ -37,8 +37,8 @@
   
   /* Audio pins */
   #define AMPLIFY_SD 4
-  /* Eprom define */
   
+  /* Eprom define */
   #define EPROM_BANK0_ADDRESS 0x50
   
   typedef enum
@@ -49,14 +49,24 @@
 	 SL_CONNECTED,
   }stateType;
   
-  
-  
+  #define ANIM_TYPE_CUSTOM 0x00
+  #define ANIM_TYPE_USER   0x01
   
   typedef struct
   {
 	  byte bleState;
 	  stateType state;
 	  byte sysStatus;
+	  struct
+	  {
+		byte animId;
+		byte animType;
+		struct
+		{
+			bool start;
+			bool stop;
+		}command;
+	  }animInfo;
 	  
   }SysRegType;
   
@@ -98,8 +108,9 @@
   */
   
   
-  #define ANIMATION_DESCRIPTOR_LEN   91
-  #define ANIMATION_MAX_FRAME_NUMBER 20
+  #define ANIMATION_DESCRIPTOR_LEN        91
+  #define ANIMATION_MAX_FRAME_NUMBER      20
+  #define ANIMATION_MEMORY_ADDRESS_OFFSET 0x0
   
   typedef union
   {
@@ -111,21 +122,26 @@
 		unsigned int frameTimeLen[ANIMATION_MAX_FRAME_NUMBER];
 		byte numberCmd[ANIMATION_MAX_FRAME_NUMBER];
 	}animParameter;
+	
 	byte raw[ANIMATION_DESCRIPTOR_LEN];
+	
   }animDescriptorType;
   
   
   
-  
+ /* This is the list of memory command  */ 
 #define MEMORY_FLAGS_SAVE_NEW_ANIM_MASK  0x01
 #define MEMORY_FLAGS_SAVE_NEW_ANIM_SHIFT 0x00
+
 #define MEMORY_STATE_SAVE_NEW_ANIM_MASK  0x02
 #define MEMORY_STATE_SAVE_NEW_ANIM_SHIFT 0x01
+
   typedef struct 
   {
       byte status;	  
 	  byte flags;
 	  animDescriptorType animDescriptor;
+	  unsigned int commandCont;
 	  byte frameIndex;
 	  
   }memoryDescriptorType;
@@ -168,3 +184,6 @@
   void memoryManagare(void);
   
   void animationManager(systemBufType* myBuffer);
+  
+  byte animationDescriptor_save(animDescriptorType* descriptor, unsigned int adr);
+  byte storedCommand_save(byte* command, unsigned int adr);
