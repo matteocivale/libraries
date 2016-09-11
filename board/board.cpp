@@ -6,6 +6,10 @@
   
   byte zeros[]={0,0,0};
   
+  #define ANIMATION_MEMORY_LEN 10
+  byte animation_memory[ANIMATION_MEMORY_LEN];
+  
+  
   SysRegType sysReg;
   
   MSGEQ7 msgeq7;
@@ -41,7 +45,7 @@
 	 
 	 /* Enable Amplify */
 	 pinMode(AMPLIFY_SD,OUTPUT);
-	 digitalWrite(AMPLIFY_SD,HIGH);
+	 digitalWrite(AMPLIFY_SD, HIGH);/*<< active High */
 	 
 	 /* Test EPROM */
 	 // EpromWriteString(EPROM_BANK0_ADDRESS,0,(unsigned char*)str, sizeof(str));
@@ -467,7 +471,7 @@
   
   
   
-  #define TIME_DELAY_BETWEEN 100//80
+  #define TIME_DELAY_BETWEEN 35//100//80
   void animationManager(systemBufType* myBuffer)
   {
 	  
@@ -491,7 +495,8 @@
 		  
 		  if (sysReg.animInfo.animType == ANIM_TYPE_CUSTOM)
 		  {	  
-			  switch(animId)
+			  //switch(animId)
+			  switch(sysReg.animInfo.animId)
 			  {
 				  case 2:
 				   inc = 1;
@@ -509,6 +514,13 @@
 	  if(sysReg.animInfo.command.stop)
 	  {
 		  sysReg.animInfo.command.stop = false;
+		  /* Reset all petals */
+		  command[1]=0xFF;
+		  command[3]=0;
+		  command[4]=0;
+		  command[5]=0;
+		  command[6]=0;
+		  push_command(myBuffer, command, 7);  
 		  run = false;
 	  }
 		  
@@ -516,7 +528,8 @@
 	  {	  
 		  actTime=millis();
 		  
-		  switch (animId)
+		  //switch (animId)
+		  switch(sysReg.animInfo.animId)
 		  {
 			  case 1:
 				  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
@@ -533,8 +546,8 @@
 					  actPointer = random(0,7);
 					  
 					  command[1]=actPointer;
-					  command[3]=255;
-					  command[4]=0;//level1;
+					  command[3]=0;//255;
+					  command[4]=255;//level1;
 					  command[5]=0;
 					  command[6]=0;//level1;
 					  

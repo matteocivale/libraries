@@ -102,7 +102,7 @@
 	  
   }buttonType;
   extern buttonType button;
-  
+  extern byte animation_memory[];
   /**
   * Structure for memory handling
   */
