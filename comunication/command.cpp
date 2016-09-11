@@ -178,6 +178,10 @@
 		        else
 				 sysReg.animInfo.command.stop = true;	
 			 
+			    /* Copy command parameter to animation memory */
+				for(i=0; i< PARAM_LEN-3; i++)
+					animation_memory[i] = myBuffer->cmdBuffer[myBuffer->headQueue].command.message.parameters[2 +i];
+			 
 			break;
       }
       myBuffer->headQueue++;
