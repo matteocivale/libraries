@@ -16,17 +16,17 @@
   
   #define CAP1188_IRQ_LINE A0
   
-  #define BUTTON_TIME_SHORT  50 
-  #define BUTTON_TIME_LONG   300
-  #define BUTTON_TIME_SLONG  800
+  #define BUTTON_TIME_SHORT  400//50 
+  #define BUTTON_TIME_LONG   700//300
+  #define BUTTON_TIME_SLONG  1200//800
   
   
   #define MSGEQT_PIN_OUTPUT  A6
   #define MSGEQT_PIN_STROBE  12
   #define MSGEQT_PIN_RESET   13
   
-  #define BOARD_MAX_PETAL_NUM    7 
-  #define BOARD_INSTALLED_PETALS 7
+  #define BOARD_MAX_PETAL_NUM    8 
+  #define BOARD_INSTALLED_PETALS 8
   
   /* system register mask */
   #define SYSTEM_BLE_ON  0x0

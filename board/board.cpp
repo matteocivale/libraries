@@ -35,7 +35,7 @@
      msgeq7.init(MSGEQT_PIN_OUTPUT, MSGEQT_PIN_STROBE, MSGEQT_PIN_RESET);
 	 
      /* Reset all petals */	
-     for(i=1; i<= 0x07; i++ )	 
+     for(i=1; i<= 0x08; i++ )	 
 	 {
         Inizilize_PCA9633(i<<2);
 		Set_Selected_PCA9633_AllOut(i<<2, zeros);
@@ -45,7 +45,7 @@
 	 
 	 /* Enable Amplify */
 	 pinMode(AMPLIFY_SD,OUTPUT);
-	 digitalWrite(AMPLIFY_SD, HIGH);/*<< active High */
+	 digitalWrite(AMPLIFY_SD, LOW);/*<< active High */
 	 
 	 /* Test EPROM */
 	 // EpromWriteString(EPROM_BANK0_ADDRESS,0,(unsigned char*)str, sizeof(str));
@@ -73,18 +73,19 @@
    */
   byte buttonMonitor(void)
   {
-     static long int HTime=0;
-	 static long int LTime=0;
-	 static byte tapN=0;
-	 static byte ltapN=0;
-	 static byte sltapN=0;
-	 static bool dvalid=false;
+     static long int HTime = 0;
+	 static long int LTime = 0;
+	 static int tapN      = 0;
+	 static byte ltapN     = 0;
+	 static byte sltapN    = 0;
+	 static bool dvalid    = false;
 	 static float ramp;
-	 static byte sign=0;
+	 static byte sign      = 0;
+	 static bool state;
+	 static bool state_1;
 	 
 	 
-	 long int actTime=millis();
-	 button.deltaT=actTime-button.time;
+	
 	 
 	 if(button.writeColor)
 	 {	  
@@ -116,46 +117,73 @@
 	 }
 	 /* Check the touch state  */
 	 
-	 
+	 long int actTime = millis();
+	 button.deltaT = actTime-button.time;
+	 state_1 = state;
 	 if((button.CAP1188.touched()&0x01)) 
 	 {
-		 HTime+=button.deltaT;
+		 HTime += button.deltaT;
 		 LTime=0;
 		 dvalid=false;
-		 //Serial.println(deltaT);
-		 if(HTime>10000)
-		 { 
-	        Serial.println(tapN);
-		    Serial.println(ltapN);
-			Serial.println(sltapN);
-			HTime=0;
-		 }
+		 state = true;
 	 }
 	 else
 	 {
-		 if((HTime>BUTTON_TIME_SHORT)&&(HTime<BUTTON_TIME_LONG))
+		 state = false;
+		 if((HTime < BUTTON_TIME_SHORT)&&(HTime))//&&(HTime < BUTTON_TIME_LONG))
 		 {
 			 tapN++;
-			// Serial.println("one tap");
+			 ltapN = 0;
+			 sltapN = 0;
+			 //if (tapN>0)
+			 //{
+				//Serial.println(HTime);
+			    //Serial.println(tapN);
+		//	 }
 	     }
 		 else
-	    	 if((HTime>BUTTON_TIME_LONG)&&(HTime<BUTTON_TIME_SLONG))
+		 {	 
+	    	 if(/*(HTime > BUTTON_TIME_LONG)&&*/(HTime))//&&(HTime<BUTTON_TIME_SLONG))
 		     {
 			    ltapN++;
+				tapN = 0;
+				sltapN = 0;
 				//Serial.println("one ltap");
 		     }			 
-		     else
-				 if(HTime>BUTTON_TIME_SLONG)
-				 {
-                    sltapN++;			 
-				   // Serial.println("long sltap");
-				 }
-		 LTime+=button.deltaT;
-		 if(LTime>500)//900 ok
+		     // else
+				 // if((HTime < BUTTON_TIME_SLONG)&&(HTime))
+				 // {
+                    // sltapN++;
+					// tapN = 0;
+					// ltapN = 0;					
+				  // Serial.println("long sltap");
+				 // }
+		 }		 
+		 LTime += button.deltaT;
+		 
+		 if(LTime> 1500)//900 ok
 		 {
-			// tapN=0;
+			//tapN=0;
 			// ltapN=0;
 			// sltapN=0;
+			/*
+			if(tapN >= 1)
+			{
+				Serial.print("S:");
+				Serial.println(tapN);
+			}
+			if(ltapN >= 1)
+			{
+				Serial.print("M:");
+				Serial.println(ltapN);
+			}
+			if(sltapN >= 1)
+			{
+				Serial.print("L:");
+				Serial.println(sltapN);
+			}
+			*/
+
 			 dvalid=true;
 		 }
 		 HTime=0;
@@ -172,12 +200,11 @@
 		 ltapN=0;
 		 tapN=0;
 		 sltapN=0;
-		 
-		 
-		 
-		
-		 
+		 dvalid = false;
+ 
 	 }
+	 //if(state ^ state_1)
+		// Serial.print("f");
 	 return 0;
   }
   
@@ -471,7 +498,7 @@
   
   
   
-  #define TIME_DELAY_BETWEEN 35//100//80
+  #define TIME_DELAY_BETWEEN 100//100//80
   void animationManager(systemBufType* myBuffer)
   {
 	  
@@ -487,7 +514,8 @@
 	  static int level1=4;
 	  static byte animId = 3;
 	  static int inc;// = 1;//uguale a 1 nel caso di scelta=2 altrimenti 7
- 	  
+ 	  byte app;
+	  
 	  if(sysReg.animInfo.command.start)
 	  {
 		  sysReg.animInfo.command.start = false;
@@ -506,7 +534,7 @@
 				  case 3:
 				  case 4:
 				  case 5:
-				   inc =7;
+				   inc =8;//7
 				  break;
 			  }
 		  }
@@ -541,25 +569,17 @@
 					  command[6]=0;
 					  push_command(myBuffer, command, 7);  
 					  
-					  lastPointer=actPointer;
-					 
-					  actPointer = random(0,7);
+					  lastPointer = actPointer;
+					  actPointer = random(0,8);
+					  app = random(0,255);
 					  
-					  command[1]=actPointer;
-					  command[3]=0;//255;
-					  command[4]=255;//level1;
-					  command[5]=0;
-					  command[6]=0;//level1;
+					  command[1] =  actPointer;
+					  command[3] = (app*animation_memory[0])/0xFF;
+					  command[4] = (app*animation_memory[1])/0xFF;
+					  command[5] = (app*animation_memory[2])/0xFF;
+					  command[6] = (app*animation_memory[3])/0xFF;
 					  
-					  push_command(myBuffer, command, 7); 
-					  
-					  // level+=2;
-					  // level1+=4;
-					  // if(level>255) level=2;		  
-					  // if(level1>255)level1=4;
-					  // actPointer++;
-					  // actPointer%=7;
-					  
+					  push_command(myBuffer, command, 7);
 					  
 					  lastTime=actTime;
 					  
@@ -577,19 +597,19 @@
 				 push_command(myBuffer, command, 7);  
 			  
 				 command[1] = actPointer;
-				 command[3] = 0;
-				 command[4] = 255;//level1;
-				 command[5] = 0;
-				 command[6] = 0;//level1;
+				 command[3] = animation_memory[0];
+				 command[4] = animation_memory[1];//level1;
+				 command[5] = animation_memory[2];
+				 command[6] = animation_memory[3];//level1;
 			  
 				 push_command(myBuffer, command, 7); 
 				 
 				 lastPointer=actPointer;
-				 if(actPointer == 6) inc=-1;
+				 if(actPointer == 7) inc=-1;
 				 if(actPointer == 0) inc=+1;
 				 actPointer += inc;
 				 //actPointer %= 7;
-				 lastTime=actTime;
+				 lastTime = actTime;
 					  
 			}
 		  
@@ -606,15 +626,11 @@
 			  
 			  lastPointer=actPointer;
 			 
-			  
-			  
-			  
-			  
 			  command[1]=actPointer;
-			  command[3]=0;
-			  command[4]=0;//level1;
-			  command[5]=0;
-			  command[6]=level1;
+			  command[3]=(level1*animation_memory[0])/0xFF;
+			  command[4]=(level1*animation_memory[1])/0xFF;//level1;
+			  command[5]=(level1*animation_memory[2])/0xFF;
+			  command[6]=(level1*animation_memory[3])/0xFF;
 			  
 			  push_command(myBuffer, command, 7); 
 			  
@@ -623,7 +639,7 @@
 			  if(level>255) level=2;		  
 			  if(level1>255)level1=4;
 			  actPointer++;
-			  actPointer%=7;
+			  actPointer%= 8;
 			  
 			  lastTime=actTime;
 			}
@@ -633,7 +649,7 @@
 			  if((actTime-lastTime)>TIME_DELAY_BETWEEN)
 				{
 					 
-					if(actPointer==7)
+					if(actPointer==8)
 					{
 						 command[1] = 0xFF;
 						 command[3] = 0;
@@ -646,10 +662,10 @@
 					else
 					{
 						 command[1] = actPointer;
-						 command[3] = 0;
-						 command[4] = 255;//level1;
-						 command[5] = 0;
-						 command[6] = 0;//level1;
+						 command[3] = animation_memory[0];
+						 command[4] = animation_memory[1];//level1;
+						 command[5] = animation_memory[2];
+						 command[6] = animation_memory[3];//level1;
 						 push_command(myBuffer, command, 7); 
 						 actPointer++;
 					}
@@ -672,10 +688,10 @@
 					push_command(myBuffer, command, 7);  
 			  
 					command[1] = actPointer;
-					command[3] = 0;
-					command[4] = 255;//level1;
-					command[5] = 0;
-					command[6] = 0;//level1;
+					command[3] = animation_memory[0];
+					command[4] = animation_memory[1];//level1;
+					command[5] = animation_memory[2];
+					command[6] = animation_memory[3];//level1;
 			  
 					push_command(myBuffer, command, 7); 
 				 
@@ -689,8 +705,8 @@
 						lastPointer = 0;
 						if(inc == 0)
 						{
-							inc = 7;
-							lastPointer=0xFF;
+							inc = 8;
+							lastPointer = 0xFF;
 						}
 					}
 					actPointer %= inc;
