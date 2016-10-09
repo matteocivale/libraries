@@ -100,6 +100,9 @@ boolean Adafruit_CAP1188::begin(uint8_t i2caddr) {
   writeRegister(CAP1188_LEDLINK, 0xFF);
   // speed up a bit
   writeRegister(CAP1188_STANDBYCFG, 0x30);
+// sett sensitivity lower_bound
+ writeRegister(CAP1188_SENS_CONTROL, 0x3F);
+
   
   return true;
 }

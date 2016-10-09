@@ -39,6 +39,7 @@
 #define CAP1188_MAIN_INT 0x01
 #define CAP1188_LEDPOL 0x73
 #define CAP1188_INT_EN 0x27
+#define CAP1188_SENS_CONTROL 0x1F
 
 
 class Adafruit_CAP1188 {
